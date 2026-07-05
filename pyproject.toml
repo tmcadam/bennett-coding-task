@@ -9,5 +9,16 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mypy>=2.1.0",
     "pytest>=9.1.1",
+]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+# Exclude the entire tests directory and any files starting with test_
+exclude = [
+    '^tests/',
+    '^tmp/',
+    'test_.*\.py$'
 ]

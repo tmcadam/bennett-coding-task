@@ -8,11 +8,22 @@ particular drugs and calculate how this varies around the country.
 
 `uv run optool.py`
 
-## Run the tests
+## Setup development environment
 
   - Clone the project from Github
   - Install dependencies with `uv sync`
-  - Run with **pytest** `uv run pytest -v`
 
 
+### Run the tests
+
+Test use **pytest**
+
+`uv run pytest -v`
+
+
+### Run type checking
+
+Type checking uses **mypy**
+
+`uv run mypy .`
 
