@@ -27,3 +27,10 @@ Type checking uses **mypy**
 
 `uv run mypy .`
 
+
+### Run linting and formatting
+
+Linting and formatting with **ruff**
+
+  - `uv run ruff check`
+  - `uv run ruff format`
