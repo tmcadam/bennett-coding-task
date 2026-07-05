@@ -8,6 +8,7 @@ import os
 import requests
 import click
 
+from custom_types import SpendingEntry, MonthlyICBSummary
 from custom_errors import MissingUserAgentError, InvalidBNFCodeError, BNFCodeNotFoundError
 
 
