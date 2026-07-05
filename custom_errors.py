@@ -2,6 +2,7 @@
 This module defines custom exceptions for the OpenPrescribing API tool.
 """
 
+
 class MissingUserAgentError(Exception):
     """Custom exception raised when the user agent environment variable is not set."""
 
