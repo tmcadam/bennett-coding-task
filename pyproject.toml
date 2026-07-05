@@ -1,0 +1,8 @@
+[project]
+name = "bennett-coding-task"
+version = "0.1.0"
+description = "A coding assessment for RSE role at Bennett Institute"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+]
