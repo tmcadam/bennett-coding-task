@@ -5,6 +5,8 @@ description = "A coding assessment for RSE role at Bennett Institute"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "click>=8.4.2",
+    "requests>=2.34.2",
 ]
 
 [dependency-groups]
