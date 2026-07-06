@@ -1,7 +1,8 @@
 from opsummary import (
     top_monthly_prescribing_icbs_by_total_items,
-    top_monthly_prescribing_icbs_by_items_per_patient
+    top_monthly_prescribing_icbs_by_items_per_patient,
 )
+
 
 class TestTopMonthlyPrescribingICBs:
     def test_top_monthly_prescribing_icbs_returns_expected_output(self):

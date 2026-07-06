@@ -31,6 +31,7 @@ class TestValidBNFCode:
         assert valid_bnf_code("12345") is False
         assert valid_bnf_code("1234567890123456") is False
 
+
 class TestCli:
     def test_optool_outputs_results_if_no_errors(self, mocker):
         # Mock the fetch_org_data and fetch_icb_spending functions to avoid actual API calls

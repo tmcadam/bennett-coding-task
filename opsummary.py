@@ -1,4 +1,10 @@
-from custom_types import MonthlyICBStats, MonthlyICBSummary, OrgDetailEntry, SpendingByOrgEntry
+from custom_types import (
+    MonthlyICBStats,
+    MonthlyICBSummary,
+    OrgDetailEntry,
+    SpendingByOrgEntry,
+)
+
 
 def top_monthly_prescribing_icbs(
     spending_data: list[SpendingByOrgEntry],

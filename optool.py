@@ -23,6 +23,7 @@ from opsummary import (
     top_monthly_prescribing_icbs_by_items_per_patient,
 )
 
+
 def get_user_agent() -> str | None:
     """Retrieve the user agent string from the environment variable.
 
