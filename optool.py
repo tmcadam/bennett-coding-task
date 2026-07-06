@@ -8,12 +8,18 @@ import os
 import requests
 import click
 
-from custom_types import SpendingEntry, MonthlyICBSummary, MonthlyICBStats, OrganizationEntry
+from custom_types import (
+    MonthlyICBSummary,
+    MonthlyICBStats,
+    OrgDetailEntry,
+    SpendingByOrgEntry,
+)
 from custom_errors import (
     MissingUserAgentError,
     InvalidBNFCodeError,
-    BNFCodeNotFoundError,
 )
+
+from opclient import OpenPrescribingClient
 
 
 def get_user_agent() -> str | None:
@@ -40,8 +46,8 @@ def valid_bnf_code(bnf_code: str) -> bool:
 
 
 def top_monthly_prescribing_icbs(
-    spending_data: list[SpendingEntry],
-    patient_count_data: list[OrganizationEntry] | None = None
+    spending_data: list[SpendingByOrgEntry],
+    patient_count_data: dict[tuple[str, str], int] | None = None,
 ) -> list[MonthlyICBSummary]:
     """Parse monthly ICB spending data to identify the ICB with the highest item measure per month.
 
@@ -54,8 +60,7 @@ def top_monthly_prescribing_icbs(
         spending_data: A list of dictionaries, each representing a spending entry with
             keys "date" (month string), "row_name" (ICB name), and "items"
             (number of items).
-        patient_count_data: A list of dictionaries containing patient count data with
-            keys "date", "row_name", and "total_list_size".
+        patient_count_data: A dictionary mapping (month, ICB) tuples to patient counts.
     Returns:
         A list of dictionaries mapping month strings to dictionaries with keys:
             - "icb" (str): The name of the ICB with the highest measure for that month.
@@ -67,12 +72,13 @@ def top_monthly_prescribing_icbs(
     for entry in spending_data:
         month: str = entry["date"]
         icb: str = entry["row_name"]
+        measure: int | float
         if patient_count_data:
             # If patient count data is provided, calculate the measure as items divided by the patient count for that ICB and month.
-            measure: float = entry["items"] / patient_count_data[(month, icb)]
+            measure = entry["items"] / patient_count_data[(month, icb)]
         else:
             # If patient count data is not provided, use the raw item count as the measure
-            measure: int = entry["items"]
+            measure = entry["items"]
 
         # lookup the current maximum items for this month, if any
         highest_icb = highest_icb_monthly.get(month, None)
@@ -92,13 +98,15 @@ def top_monthly_prescribing_icbs(
     return returned_data
 
 
-def top_monthly_prescribing_icbs_by_total_items(spending_data: list[SpendingEntry]) -> list[MonthlyICBSummary]:
+def top_monthly_prescribing_icbs_by_total_items(
+    spending_data: list[SpendingByOrgEntry],
+) -> list[MonthlyICBSummary]:
 
     return top_monthly_prescribing_icbs(spending_data)
 
 
 def top_monthly_prescribing_icbs_by_items_per_patient(
-    spending_data: list[SpendingEntry], organization_data: list[OrganizationEntry]
+    spending_data: list[SpendingByOrgEntry], organization_data: list[OrgDetailEntry]
 ) -> list[MonthlyICBSummary]:
 
     # Create a lookup dictionary for patient count data
@@ -108,99 +116,16 @@ def top_monthly_prescribing_icbs_by_items_per_patient(
     }
 
     # Call the ranking function with the patient count data
-    return top_monthly_prescribing_icbs(
-        spending_data, patient_count_data
-    )
+    return top_monthly_prescribing_icbs(spending_data, patient_count_data)
 
-
-def lookup_chemical_name(bnf_code: str, user_agent: str) -> str:
-    """Fetch the chemical name for a given BNF code from the OpenPrescribing API.
-
-    Args:
-        bnf_code (str): The BNF code for which to fetch the chemical name.
-        user_agent (str | None): The user agent string to use for the API request.
-
-    Returns:
-        str: The chemical name if found
-    """
-
-    url: str = "https://openprescribing.net/api/1.0/bnf_code/"
-    params: dict[str, str | bool] = {"exact": True, "format": "json", "q": bnf_code}
-    headers: dict[str, str] = {"User-Agent": user_agent}
-
-    # Make the API request with a timeout to avoid hanging indefinitely
-    response: requests.Response = requests.get(
-        url, headers=headers, params=params, timeout=10
-    )
-    response.raise_for_status()
-
-    # Check if the response contains data for the given BNF code
-    data: list[dict[str, str]] = response.json()
-    if not data:
-        raise BNFCodeNotFoundError(
-            f"No chemical information found for BNF code {bnf_code}"
-        )
-
-    # Return the chemical name from the first entry in the response data
-    chemical_name: str | None = data[0].get("name", None)
-    if not chemical_name:
-        raise BNFCodeNotFoundError(
-            f"No chemical name found in response for BNF code {bnf_code}"
-        )
-
-    return chemical_name
-
-
-def fetch_icb_spending_data(bnf_code: str, user_agent: str) -> list[SpendingEntry]:
-    """Fetch ICB spending data for a given BNF code from the OpenPrescribing API."""
-
-    params: dict[str, str | bool] = {
-        "format": "json",
-        "code": bnf_code,
-        "org_type": "icb",
-    }
-    headers: dict[str, str] = {"User-Agent": user_agent}
-
-    response = requests.get(
-        "https://openprescribing.net/api/1.0/spending_by_org/",
-        params=params,
-        headers=headers,
-    )
-    response.raise_for_status()
-
-    spending_data: list[SpendingEntry] = response.json()
-    if not spending_data:
-        raise BNFCodeNotFoundError(f"No spending data found for BNF code {bnf_code}")
-
-    return spending_data
-
-def fetch_organization_data(user_agent: str) -> list[OrganizationEntry]:
-    """Fetch organization information for ICBs from the OpenPrescribing API."""
-
-    params: dict[str, str | bool] = {
-        "format": "json",
-        "org_type": "icb",
-        "keys": "total_list_size",
-    }
-    headers: dict[str, str] = {"User-Agent": user_agent}
-
-    response = requests.get(
-        "https://openprescribing.net/api/1.0/org_details/",
-        params=params,
-        headers=headers,
-        timeout=10  # Set a timeout to avoid hanging indefinitely
-    )
-    response.raise_for_status()
-
-    org_data: list[OrganizationEntry] = response.json()
-    if not org_data:
-        raise BNFCodeNotFoundError("No organization data found")
-
-    return org_data
 
 @click.command()
 @click.argument("bnf_code", type=str)
-@click.option("--weighted", is_flag=True, help="Calculate patient weighted spending for the given BNF code")
+@click.option(
+    "--weighted",
+    is_flag=True,
+    help="Calculate patient weighted spending for the given BNF code",
+)
 def main(bnf_code: str, weighted: bool | None) -> None:
     """Process a target file and extract metrics.
 
@@ -214,27 +139,31 @@ def main(bnf_code: str, weighted: bool | None) -> None:
                 "OPENPRESCRIBING_USER_AGENT environment variable is not set."
             )
 
+        client = OpenPrescribingClient(user_agent=user_agent)
+
         if not valid_bnf_code(bnf_code):
             raise InvalidBNFCodeError(
                 f"BNF code must be 15 characters long. Provided code: {bnf_code}"
             )
 
-        chemical_name: str = lookup_chemical_name(bnf_code, user_agent)
+        chemical_name: str = client.fetch_chemical_name(bnf_code)
 
-        spending_data: list[SpendingEntry] = fetch_icb_spending_data(
-            bnf_code, user_agent
+        spending_data: list[SpendingByOrgEntry] = client.fetch_icb_spending_data(
+            bnf_code
         )
 
+        top_spending_data: list[MonthlyICBSummary]
         if weighted:
             # Fetch organization data to get total list size for each ICB
-            organization_data: list[OrganizationEntry] = fetch_organization_data(user_agent)
-
+            organisation_data = client.fetch_organisation_data()
             # Calculate patient weighted spending
-            top_spending_data = top_monthly_prescribing_icbs_by_items_per_patient(spending_data, organization_data)
+            top_spending_data = top_monthly_prescribing_icbs_by_items_per_patient(
+                spending_data, organisation_data
+            )
 
         else:
             # Calculate top spending ICBs without weighting
-            top_spending_data: list[MonthlyICBSummary] = top_monthly_prescribing_icbs_by_total_items(
+            top_spending_data = top_monthly_prescribing_icbs_by_total_items(
                 spending_data
             )
 
