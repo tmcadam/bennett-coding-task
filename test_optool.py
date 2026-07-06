@@ -1,12 +1,12 @@
 from requests.exceptions import RequestException
 from click.testing import CliRunner
 
-from custom_errors import BNFCodeNotFoundError
 from optool import (
     main,
     get_user_agent,
-    valid_bnf_code,
+    valid_bnf_code
 )
+from opclient import BNFCodeNotFoundError
 
 
 class TestGetUserAgent:

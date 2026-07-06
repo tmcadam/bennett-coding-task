@@ -2,9 +2,12 @@ from typing import Any, cast
 
 import requests
 
-from custom_errors import BNFCodeNotFoundError
 from custom_types import OrgDetailEntry, SpendingByOrgEntry, BNFCodeEntry
 
+class BNFCodeNotFoundError(Exception):
+    """Custom exception raised when a BNF code is not found in the OpenPrescribing API."""
+
+    pass
 
 class OpenPrescribingClient:
     BASE_URL = "https://openprescribing.net/api/1.0"

@@ -1,8 +1,7 @@
 import pytest
 from requests import HTTPError, RequestException
 
-from opclient import OpenPrescribingClient
-from custom_errors import BNFCodeNotFoundError
+from opclient import OpenPrescribingClient, BNFCodeNotFoundError
 
 
 class TestOpenPrescribingAPI:
