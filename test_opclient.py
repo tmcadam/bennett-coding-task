@@ -1,10 +1,10 @@
 import pytest
 from requests import HTTPError, RequestException
 
-from opclient import OpenPrescribingClient, BNFCodeNotFoundError
+from opclient import OpenPrescribingClient, BNFCodeNotFoundError, OrgDataNotFoundError
 
 
-class TestOpenPrescribingAPI:
+class TestOpenPrescribingClient:
     def test_fetch_data_from_api_returns_expected_value(self, mocker):
         r = mocker.Mock()
         r.status_code = 200
@@ -102,3 +102,39 @@ class TestFetchICBSpendingData:
         client = OpenPrescribingClient(user_agent=user_agent)
         with pytest.raises(BNFCodeNotFoundError):
             client.fetch_icb_spending_data(bnf_code)
+
+
+class TestFetchOrganisationData:
+
+    def test_fetch_organisation_data_returns_expected_value(self, mocker):
+        r = mocker.Mock()
+        r.status_code = 200
+        r.json.return_value = [
+            {"date": "A", "row_name": "Org A", "total_list_size": 100},
+            {"date": "B", "row_name": "Org B", "total_list_size": 150},
+        ]
+        mocker.patch("opclient.requests.get", return_value=r)
+
+        user_agent = "test-user-agent"
+        expected_org_data = [
+            {"date": "A", "row_name": "Org A", "total_list_size": 100},
+            {"date": "B", "row_name": "Org B", "total_list_size": 150},
+        ]
+
+        client = OpenPrescribingClient(user_agent=user_agent)
+        org_data = client.fetch_organisation_data()
+        assert org_data == expected_org_data
+
+    def test_fetch_organisation_data_raises_OrgDataNotFoundError_for_no_data(
+        self, mocker
+    ):
+        r = mocker.Mock()
+        r.status_code = 200
+        r.json.return_value = []
+        mocker.patch("opclient.requests.get", return_value=r)
+
+        user_agent = "test-user-agent"
+
+        client = OpenPrescribingClient(user_agent=user_agent)
+        with pytest.raises(OrgDataNotFoundError):
+            client.fetch_organisation_data()

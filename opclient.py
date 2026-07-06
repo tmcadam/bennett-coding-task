@@ -9,6 +9,13 @@ class BNFCodeNotFoundError(Exception):
 
     pass
 
+
+class OrgDataNotFoundError(Exception):
+    """Custom exception raised when organisation data is not found in the OpenPrescribing API."""
+
+    pass
+
+
 class OpenPrescribingClient:
     BASE_URL = "https://openprescribing.net/api/1.0"
 
@@ -109,6 +116,6 @@ class OpenPrescribingClient:
             list[OrgDetailEntry], self.fetch_data_from_api("org_details", params)
         )
         if not org_data:
-            raise BNFCodeNotFoundError("No organisation data found")
+            raise OrgDataNotFoundError("No organisation data found")
 
         return org_data
