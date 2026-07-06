@@ -11,11 +11,14 @@ class SpendingEntry(TypedDict):
     row_name: str
     items: int
 
+class OrganizationEntry(TypedDict):
+    date: str
+    row_name: str
+    total_list_size: int
 
 class MonthlyICBStats(TypedDict):
     icb: str
-    measure: int
-
+    measure: int | float
 
 class MonthlyICBSummary(TypedDict):
     month: str
