@@ -1,16 +1,12 @@
-import pytest
-from requests.exceptions import RequestException, HTTPError
+from requests.exceptions import RequestException
 from click.testing import CliRunner
 
 from optool import (
-    top_monthly_icb_spending,
     main,
     get_user_agent,
-    valid_bnf_code,
-    lookup_chemical_name,
-    fetch_icb_spending_data,
-    BNFCodeNotFoundError,
+    valid_bnf_code
 )
+from opclient import BNFCodeNotFoundError
 
 
 class TestGetUserAgent:
@@ -36,123 +32,16 @@ class TestValidBNFCode:
         assert valid_bnf_code("1234567890123456") is False
 
 
-class TestLookupChemicalName:
-    def test_lookup_chemical_name_returns_expected_value(self, mocker):
-        r = mocker.Mock()
-        r.status_code = 200
-        r.json.return_value = [{"name": "Test Chemical Name"}]
-        mocker.patch("optool.requests.get", return_value=r)
-
-        bnf_code = "123456789012345"
-        user_agent = "test-user-agent"
-        expected_chemical_name = "Test Chemical Name"
-
-        chemical_name = lookup_chemical_name(bnf_code, user_agent)
-        assert chemical_name == expected_chemical_name
-
-    def test_lookup_chemical_name_raises_BNFCodeNotFoundError_for_not_found(
-        self, mocker
-    ):
-        r = mocker.Mock()
-        r.status_code = 200
-        r.json.return_value = []
-        mocker.patch("optool.requests.get", return_value=r)
-
-        bnf_code = "123456789012345"
-        user_agent = "test-user-agent"
-
-        with pytest.raises(BNFCodeNotFoundError):
-            lookup_chemical_name(bnf_code, user_agent)
-
-    def test_lookup_chemical_name_raises_RequestException_for_status_code_gt_400(
-        self, mocker
-    ):
-        r = mocker.Mock()
-        r.status_code = 404
-        r.raise_for_status.side_effect = HTTPError("404 Not Found")
-        mocker.patch("optool.requests.get", return_value=r)
-
-        bnf_code = "123456789012345"
-        user_agent = "test-user-agent"
-
-        with pytest.raises(RequestException):
-            lookup_chemical_name(bnf_code, user_agent)
-
-
-class TestFetchICBSpendingData:
-    def test_fetch_icb_spending_data_returns_expected_value(self, mocker):
-        r = mocker.Mock()
-        r.status_code = 200
-        r.json.return_value = [
-            {"date": "2023-01", "row_name": "ICB A", "items": 100},
-            {"date": "2023-01", "row_name": "ICB B", "items": 150},
-        ]
-        mocker.patch("optool.requests.get", return_value=r)
-
-        bnf_code = "123456789012345"
-        user_agent = "test-user-agent"
-        expected_spending_data = [
-            {"date": "2023-01", "row_name": "ICB A", "items": 100},
-            {"date": "2023-01", "row_name": "ICB B", "items": 150},
-        ]
-
-        spending_data = fetch_icb_spending_data(bnf_code, user_agent)
-        assert spending_data == expected_spending_data
-
-    def test_fetch_icb_spending_data_raises_RequestException_for_status_code_gt_400(
-        self, mocker
-    ):
-        r = mocker.Mock()
-        r.status_code = 404
-        r.raise_for_status.side_effect = HTTPError("404 Not Found")
-        mocker.patch("optool.requests.get", return_value=r)
-
-        bnf_code = "123456789012345"
-        user_agent = "test-user-agent"
-
-        with pytest.raises(RequestException):
-            fetch_icb_spending_data(bnf_code, user_agent)
-
-    def test_fetch_icb_spending_data_raises_BNFCodeNotFoundError_for_no_data(
-        self, mocker
-    ):
-        r = mocker.Mock()
-        r.status_code = 200
-        r.json.return_value = []
-        mocker.patch("optool.requests.get", return_value=r)
-
-        bnf_code = "123456789012345"
-        user_agent = "test-user-agent"
-
-        with pytest.raises(BNFCodeNotFoundError):
-            fetch_icb_spending_data(bnf_code, user_agent)
-
-
-class TestTopMonthlyICBSpending:
-    def test_top_monthly_icb_spending_returns_expected_output(self):
-        spending_data = [
-            {"date": "2023-02", "row_name": "ICB A", "items": 200},
-            {"date": "2023-02", "row_name": "ICB B", "items": 50},
-            {"date": "2023-01", "row_name": "ICB A", "items": 100},
-            {"date": "2023-01", "row_name": "ICB B", "items": 150},
-        ]
-
-        expected_output = [
-            {"month": "2023-01", "icb": "ICB B"},
-            {"month": "2023-02", "icb": "ICB A"},
-        ]
-
-        result = top_monthly_icb_spending(spending_data)
-        assert result == expected_output
-
-
 class TestCli:
     def test_optool_outputs_results_if_no_errors(self, mocker):
         # Mock the fetch_org_data and fetch_icb_spending functions to avoid actual API calls
         mocker.patch("optool.get_user_agent", return_value="test-user-agent")
-        mocker.patch("optool.lookup_chemical_name", return_value="Clobetasone butyrate")
         mocker.patch(
-            "optool.fetch_icb_spending_data",
+            "optool.OpenPrescribingClient.fetch_chemical_name",
+            return_value="Clobetasone butyrate",
+        )
+        mocker.patch(
+            "optool.OpenPrescribingClient.fetch_icb_spending_data",
             return_value=[
                 {"date": "2023-01", "row_name": "ICB A", "items": 100},
                 {"date": "2023-01", "row_name": "ICB B", "items": 150},
@@ -194,7 +83,7 @@ class TestCli:
     def test_optool_exits_with_error_if_lookup_chemical_name_fails(self, mocker):
         mocker.patch("optool.get_user_agent", return_value="test-user-agent")
         mocker.patch(
-            "optool.lookup_chemical_name",
+            "optool.OpenPrescribingClient.fetch_chemical_name",
             side_effect=BNFCodeNotFoundError(
                 "No data found for BNF code 1304000H0AAAAAA"
             ),
@@ -205,3 +94,22 @@ class TestCli:
 
         assert result.exit_code != 0
         assert "Error: No data found for BNF code 1304000H0AAAAAA" in result.output
+
+    def test_optool_exits_with_error_if_fetch_icb_spending_data_fails(self, mocker):
+        mocker.patch("optool.get_user_agent", return_value="test-user-agent")
+        mocker.patch(
+            "optool.OpenPrescribingClient.fetch_chemical_name",
+            return_value="Clobetasone butyrate",
+        )
+        mocker.patch(
+            "optool.OpenPrescribingClient.fetch_icb_spending_data",
+            side_effect=RequestException(
+                "Failed to fetch data from OpenPrescribing API"
+            ),
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(main, ["1304000H0AAAAAA"])
+
+        assert result.exit_code != 0
+        assert "Error: Failed to fetch data from OpenPrescribing API" in result.output

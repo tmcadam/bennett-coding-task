@@ -13,9 +13,3 @@ class InvalidBNFCodeError(Exception):
     """Custom exception raised when an invalid BNF code is provided."""
 
     pass
-
-
-class BNFCodeNotFoundError(Exception):
-    """Custom exception raised when a BNF code is not found in the OpenPrescribing API."""
-
-    pass
