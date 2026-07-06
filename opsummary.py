@@ -6,7 +6,7 @@ from custom_types import (
 )
 
 
-def top_monthly_prescribing_icbs(
+def _top_monthly_prescribing_icbs(
     spending_data: list[SpendingByOrgEntry],
     patient_count_data: dict[tuple[str, str], int] | None = None,
 ) -> list[MonthlyICBSummary]:
@@ -63,7 +63,7 @@ def top_monthly_prescribing_icbs_by_total_items(
     spending_data: list[SpendingByOrgEntry],
 ) -> list[MonthlyICBSummary]:
 
-    return top_monthly_prescribing_icbs(spending_data)
+    return _top_monthly_prescribing_icbs(spending_data, None)
 
 
 def top_monthly_prescribing_icbs_by_items_per_patient(
@@ -77,4 +77,4 @@ def top_monthly_prescribing_icbs_by_items_per_patient(
     }
 
     # Call the ranking function with the patient count data
-    return top_monthly_prescribing_icbs(spending_data, patient_count_data)
+    return _top_monthly_prescribing_icbs(spending_data, patient_count_data)
