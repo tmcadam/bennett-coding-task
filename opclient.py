@@ -1,15 +1,3 @@
-"""OpenPrescribing API Client.
-
-This module provides a client for interacting with the OpenPrescribing API.
-It includes utilities for fetching BNF code information, ICB spending data,
-and organisation data, as well as custom exception classes for error handling.
-
-Main components:
-    - OpenPrescribingClient: The primary client class for API interactions.
-    - BNFCodeNotFoundError: Exception raised when a BNF code is not found.
-    - OrgDataNotFoundError: Exception raised when organisation data is not found.
-"""
-
 from typing import Any, cast
 
 import requests
@@ -103,6 +91,8 @@ class OpenPrescribingClient:
         data: list[BNFCodeEntry] = cast(
             list[BNFCodeEntry], self.fetch_data_from_api("bnf_code", params)
         )
+
+        print(data)
 
         if not data:
             raise BNFCodeNotFoundError(
