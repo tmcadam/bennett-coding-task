@@ -10,15 +10,18 @@ from custom_types import (
     MonthlyTopPrescribingICB,
     SpendingByOrgEntry,
 )
-from custom_errors import (
-    InvalidBNFCodeError,
-)
 
 from opclient import OpenPrescribingClient
 from opsummary import (
     top_monthly_prescribing_icbs_by_total_items,
     top_monthly_prescribing_icbs_by_items_per_patient,
 )
+
+
+class InvalidBNFCodeError(Exception):
+    """Custom exception raised when an invalid BNF code is provided."""
+
+    pass
 
 
 def valid_bnf_code(bnf_code: str) -> bool:
