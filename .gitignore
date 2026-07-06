@@ -11,6 +11,3 @@ wheels/
 
 # Tmp folder
 tmp/
-
-#.env file
-.env

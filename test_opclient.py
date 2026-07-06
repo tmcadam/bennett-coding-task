@@ -105,7 +105,6 @@ class TestFetchICBSpendingData:
 
 
 class TestFetchOrganisationData:
-
     def test_fetch_organisation_data_returns_expected_value(self, mocker):
         r = mocker.Mock()
         r.status_code = 200

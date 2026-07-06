@@ -4,6 +4,7 @@ import requests
 
 from custom_types import OrgDetailEntry, SpendingByOrgEntry, BNFCodeEntry
 
+
 class BNFCodeNotFoundError(Exception):
     """Custom exception raised when a BNF code is not found in the OpenPrescribing API."""
 
@@ -19,9 +20,11 @@ class OrgDataNotFoundError(Exception):
 class OpenPrescribingClient:
     BASE_URL = "https://openprescribing.net/api/1.0"
 
-    def __init__(self, user_agent: str, timeout: int = 10) -> None:
-        self.user_agent: str = user_agent
-        self.headers: dict[str, str] = {"User-Agent": self.user_agent}
+    def __init__(self, user_agent: str | None, timeout: int = 10) -> None:
+        self.user_agent: str | None = user_agent
+        self.headers: dict[str, str] = (
+            {"User-Agent": self.user_agent} if self.user_agent else {}
+        )
         self.timeout: int = timeout
 
     def fetch_data_from_api(

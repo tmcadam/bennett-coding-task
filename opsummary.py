@@ -67,9 +67,7 @@ def _top_monthly_prescribing_icbs(
         for month, data in top_monthly_prescribing_icbs_tmp.items()
     ]
     # Sort by month in ascending order
-    top_monthly_prescribing_icbs.sort(
-        key=lambda x: x["month"], reverse=False
-    )
+    top_monthly_prescribing_icbs.sort(key=lambda x: x["month"], reverse=False)
 
     return top_monthly_prescribing_icbs
 
