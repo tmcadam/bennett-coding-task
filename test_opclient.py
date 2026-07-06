@@ -35,6 +35,19 @@ class TestOpenPrescribingClient:
         with pytest.raises(RequestException):
             client.fetch_data_from_api(resource, params)
 
+    def test_can_initialize_client_with_user_agent(self):
+        user_agent = "test-user-agent"
+        client = OpenPrescribingClient(user_agent=user_agent)
+        assert client.user_agent == user_agent
+        assert client.headers == {"User-Agent": user_agent}
+        assert client.timeout == 10
+
+    def test_can_initialize_client_without_user_agent(self):
+        client = OpenPrescribingClient(user_agent=None)
+        assert client.user_agent is None
+        assert client.headers == {}
+        assert client.timeout == 10
+
 
 class TestFetchChemicalName:
     def test_fetch_chemical_name_returns_expected_value(self, mocker):
