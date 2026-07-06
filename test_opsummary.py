@@ -5,6 +5,7 @@ from opsummary import (
 
 
 class TestTopMonthlyPrescribingICBs:
+
     def test_top_monthly_prescribing_icbs_returns_expected_output(self):
         spending_data = [
             {"date": "2023-02", "row_name": "ICB A", "items": 200},
@@ -20,6 +21,49 @@ class TestTopMonthlyPrescribingICBs:
 
         result = top_monthly_prescribing_icbs_by_total_items(spending_data)
         assert result == expected_output
+
+
+    def test_top_monthly_icb_spending_with_tie_for_top_place_case1(self):
+        """
+        Test the function's behavior when there is a tie for the highest total items in a month.
+        This is specifically mentioned in the task description.
+        """
+        spending_data = [
+            {"date": "2023-02", "row_name": "ICB A", "items": 200},
+            {"date": "2023-02", "row_name": "ICB B", "items": 200},
+            {"date": "2023-01", "row_name": "ICB A", "items": 100},
+            {"date": "2023-01", "row_name": "ICB B", "items": 150},
+        ]
+
+        expected_output = [
+            {"month": "2023-01", "icb": "ICB B"},
+            {"month": "2023-02", "icb": "ICB A"},  # appears first in API response
+        ]
+
+        result = top_monthly_prescribing_icbs_by_total_items(spending_data)
+        assert result == expected_output
+
+    def test_top_monthly_icb_spending_with_tie_for_top_place_case2(self):
+        """
+        Test the function's behavior when there is a tie for the highest total items in a month.
+        This is specifically mentioned in the task description.
+        """
+
+        spending_data = [
+            {"date": "2023-02", "row_name": "ICB B", "items": 200},
+            {"date": "2023-02", "row_name": "ICB A", "items": 200},
+            {"date": "2023-01", "row_name": "ICB A", "items": 100},
+            {"date": "2023-01", "row_name": "ICB B", "items": 150},
+        ]
+
+        expected_output = [
+            {"month": "2023-01", "icb": "ICB B"},
+            {"month": "2023-02", "icb": "ICB B"},  # appears first in API response
+        ]
+
+        result = top_monthly_prescribing_icbs_by_total_items(spending_data)
+        assert result == expected_output
+
 
     def test_top_monthly_icb_spending_with_patient_count_data(self):
         spending_data = [

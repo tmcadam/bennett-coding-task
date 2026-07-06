@@ -28,6 +28,6 @@ class MonthlyICBStats(TypedDict):
     measure: int | float
 
 
-class MonthlyICBSummary(TypedDict):
+class MonthlyTopPrescribingICB(TypedDict):
     month: str
     icb: str

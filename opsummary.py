@@ -1,6 +1,21 @@
+"""
+This module provides functions to analyse monthly prescribing data for Integrated Care Boards (ICBs)
+and identify the ICB with the highest prescribing measure for each month.
+
+It has two main functions:
+
+1. top_monthly_prescribing_icbs_by_total_items: Identifies the ICB with the highest total items
+prescribed for each month.
+
+2. top_monthly_prescribing_icbs_by_items_per_patient: Identifies the ICB with the highest items
+prescribed per patient for each month, using patient count data.
+
+The module uses custom types defined in custom_types.py for type hinting and data structure definitions.
+"""
+
 from custom_types import (
     MonthlyICBStats,
-    MonthlyICBSummary,
+    MonthlyTopPrescribingICB,
     OrgDetailEntry,
     SpendingByOrgEntry,
 )
@@ -9,26 +24,24 @@ from custom_types import (
 def _top_monthly_prescribing_icbs(
     spending_data: list[SpendingByOrgEntry],
     patient_count_data: dict[tuple[str, str], int] | None = None,
-) -> list[MonthlyICBSummary]:
-    """Parse monthly ICB spending data to identify the ICB with the highest item measure per month.
+) -> list[MonthlyTopPrescribingICB]:
+    """Rank the highest-prescribing ICB for each month.
 
-    For each month in the spending data the item count is used as the measure.
-
-    The function returns a list of dictionaries mapping each month to the ICB that had the
-    highest measure for that month, along with the corresponding measure value.
+    This helper compares each month's spending entries and keeps the ICB with the highest
+    measure for that month. When patient counts are provided, the measure is calculated as
+    items per patient; otherwise it uses the raw item count.
 
     Args:
-        spending_data: A list of dictionaries, each representing a spending entry with
-            keys "date" (month string), "row_name" (ICB name), and "items"
-            (number of items).
-        patient_count_data: A dictionary mapping (month, ICB) tuples to patient counts.
+        spending_data: Spending entries for each ICB and month.
+        patient_count_data: Optional mapping of (month, ICB) to patient counts used to
+            calculate a per-patient measure.
+
     Returns:
-        A list of dictionaries mapping month strings to dictionaries with keys:
-            - "icb" (str): The name of the ICB with the highest measure for that month.
+        A list of monthly summaries, where each entry contains the month and the selected ICB.
     """
 
     # data structure to hold the highest ICB for each month
-    highest_icb_monthly: dict[str, MonthlyICBStats] = {}
+    top_monthly_prescribing_icbs_tmp: dict[str, MonthlyICBStats] = {}
 
     for entry in spending_data:
         month: str = entry["date"]
@@ -42,39 +55,65 @@ def _top_monthly_prescribing_icbs(
             measure = entry["items"]
 
         # lookup the current maximum items for this month, if any
-        highest_icb = highest_icb_monthly.get(month, None)
+        top_icb = top_monthly_prescribing_icbs_tmp.get(month, None)
 
         # check if the current ICB has a higher measure than the current maximum for this month
-        if not highest_icb or measure > highest_icb["measure"]:
-            highest_icb_monthly[month] = {"icb": icb, "measure": measure}
+        if not top_icb or measure > top_icb["measure"]:
+            top_monthly_prescribing_icbs_tmp[month] = {"icb": icb, "measure": measure}
 
-    returned_data: list[MonthlyICBSummary] = [
+    # Convert the dictionary to a list of MonthlyTopPrescribingICB entries
+    top_monthly_prescribing_icbs: list[MonthlyTopPrescribingICB] = [
         {"month": month, "icb": data["icb"]}
-        for month, data in highest_icb_monthly.items()
+        for month, data in top_monthly_prescribing_icbs_tmp.items()
     ]
-    returned_data.sort(
+    # Sort by month in ascending order
+    top_monthly_prescribing_icbs.sort(
         key=lambda x: x["month"], reverse=False
-    )  # Sort by month in ascending order
+    )
 
-    return returned_data
+    return top_monthly_prescribing_icbs
 
 
 def top_monthly_prescribing_icbs_by_total_items(
     spending_data: list[SpendingByOrgEntry],
-) -> list[MonthlyICBSummary]:
+) -> list[MonthlyTopPrescribingICB]:
+    """Rank the highest-prescribing ICB for each month based on total items.
+
+    This function identifies the ICB with the highest total item count for each month
+    using the provided spending data.
+
+    Args:
+        spending_data: A list of SpendingByOrgEntry dictionaries containing the spending data for each ICB and month, with keys "date", "row_name", and "items".
+
+    Returns:
+        A list of MonthlyTopPrescribingICB entries, each containing the month and the ICB with the highest total items for that month, sorted by month in ascending order.
+    """
 
     return _top_monthly_prescribing_icbs(spending_data, None)
 
 
 def top_monthly_prescribing_icbs_by_items_per_patient(
     spending_data: list[SpendingByOrgEntry], organization_data: list[OrgDetailEntry]
-) -> list[MonthlyICBSummary]:
+) -> list[MonthlyTopPrescribingICB]:
+    """Rank the highest-prescribing ICB for each month based on items per patient.
 
-    # Create a lookup dictionary for patient count data
+    This function calculates the items per patient for each ICB and month using the provided
+    spending data and organization data, and then identifies the ICB with the highest items
+    per patient for each month.
+
+    Args:
+        spending_data: A list of SpendingByOrgEntry dictionaries containing the spending data for each ICB and month, with keys "date", "row_name", and "items".
+        organization_data: A list of OrgDetailEntry dictionaries containing the patient count data for each ICB and month, with keys "date", "row_name", and "total_list_size".
+
+    Returns:
+        A list of MonthlyTopPrescribingICB entries, each containing the month and the ICB with the highest items per patient for that month, sorted by month in ascending order.
+    """
+
+    # Create dictionary for fast O(1) lookup of patient count data
     patient_count_data: dict[tuple[str, str], int] = {
         (item["date"], item["row_name"]): item["total_list_size"]
         for item in organization_data
     }
 
-    # Call the ranking function with the patient count data
+    # Call the ranking function with the spending_data and patient count data
     return _top_monthly_prescribing_icbs(spending_data, patient_count_data)

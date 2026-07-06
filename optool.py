@@ -9,7 +9,7 @@ import requests
 import click
 
 from custom_types import (
-    MonthlyICBSummary,
+    MonthlyTopPrescribingICB,
     SpendingByOrgEntry,
 )
 from custom_errors import (
@@ -80,7 +80,7 @@ def main(bnf_code: str, weighted: bool | None) -> None:
             bnf_code
         )
 
-        top_spending_data: list[MonthlyICBSummary]
+        top_spending_data: list[MonthlyTopPrescribingICB]
         if weighted:
             # Fetch organization data to get total list size for each ICB
             organisation_data = client.fetch_organisation_data()
