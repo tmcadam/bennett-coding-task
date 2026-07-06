@@ -59,6 +59,7 @@ The main design choices were driven by simplicity, maintainability, and keeping 
 - I did not use `pandas` for the summarising logic, since the data transformations were straightforward and could be implemented clearly with plain Python data structures.
 - I used synchronous requests rather than an asynchronous approach, as the scope of the project is small and the performance was acceptable for manual testing.
 - I started with a single-file implementation and then split the functionality into separate modules as the code became longer and harder to follow.
+- I used modern Python tooling UV, pytest, ruff and mypy.
 
 
 ## Development setup
