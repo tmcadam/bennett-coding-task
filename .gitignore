@@ -9,8 +9,3 @@ wheels/
 # Virtual environments
 .venv
 
-# Tmp folder
-tmp/
-
-#.env file
-.env

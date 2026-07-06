@@ -7,7 +7,7 @@ from typing import TypedDict
 
 
 class BNFCodeEntry(TypedDict):
-    bnf_code: str
+    id: str
     name: str
 
 

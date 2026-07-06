@@ -3,18 +3,12 @@
 This module provides a command-line interface (CLI) for interacting with the OpenPrescribing API.
 """
 
-import os
-
 import requests
 import click
 
 from custom_types import (
     MonthlyTopPrescribingICB,
     SpendingByOrgEntry,
-)
-from custom_errors import (
-    MissingUserAgentError,
-    InvalidBNFCodeError,
 )
 
 from opclient import OpenPrescribingClient
@@ -24,14 +18,10 @@ from opsummary import (
 )
 
 
-def get_user_agent() -> str | None:
-    """Retrieve the user agent string from the environment variable.
+class InvalidBNFCodeError(Exception):
+    """Custom exception raised when an invalid BNF code is provided."""
 
-    Returns:
-        str | None: The user agent string or None if not set.
-
-    """
-    return os.environ.get("OPENPRESCRIBING_USER_AGENT", None)
+    pass
 
 
 def valid_bnf_code(bnf_code: str) -> bool:
@@ -52,21 +42,21 @@ def valid_bnf_code(bnf_code: str) -> bool:
 @click.option(
     "--weighted",
     is_flag=True,
-    help="Calculate patient weighted spending for the given BNF code",
+    help="Use patient weighted spending to determine the top prescribing ICBs",
 )
-def main(bnf_code: str, weighted: bool | None) -> None:
-    """Process a target file and extract metrics.
+@click.option(
+    "--user-agent",
+    type=str,
+    default=None,
+    help="User agent string for API requests",
+)
+def main(bnf_code: str, weighted: bool | None, user_agent: str | None) -> None:
+    """Look up the chemical name and top prescribing ICBs for a given BNF code from the OpenPrescribing API.
 
     BNF_CODE is the 15-character BNF code for which to fetch the chemical name.
     """
 
     try:
-        user_agent: str | None = get_user_agent()
-        if not user_agent:
-            raise MissingUserAgentError(
-                "OPENPRESCRIBING_USER_AGENT environment variable is not set."
-            )
-
         client = OpenPrescribingClient(user_agent=user_agent)
 
         if not valid_bnf_code(bnf_code):

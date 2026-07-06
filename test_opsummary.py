@@ -5,7 +5,6 @@ from opsummary import (
 
 
 class TestTopMonthlyPrescribingICBs:
-
     def test_top_monthly_prescribing_icbs_returns_expected_output(self):
         spending_data = [
             {"date": "2023-02", "row_name": "ICB A", "items": 200},
@@ -21,7 +20,6 @@ class TestTopMonthlyPrescribingICBs:
 
         result = top_monthly_prescribing_icbs_by_total_items(spending_data)
         assert result == expected_output
-
 
     def test_top_monthly_icb_spending_with_tie_for_top_place_case1(self):
         """
@@ -63,7 +61,6 @@ class TestTopMonthlyPrescribingICBs:
 
         result = top_monthly_prescribing_icbs_by_total_items(spending_data)
         assert result == expected_output
-
 
     def test_top_monthly_icb_spending_with_patient_count_data(self):
         spending_data = [
