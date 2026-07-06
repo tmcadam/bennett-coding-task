@@ -39,7 +39,7 @@ def valid_bnf_code(bnf_code: str) -> bool:
 @click.option(
     "--weighted",
     is_flag=True,
-    help="Calculate patient weighted spending for the given BNF code",
+    help="Use patient weighted spending to determine the top prescribing ICBs",
 )
 @click.option(
     "--user-agent",
