@@ -100,6 +100,7 @@ def main(bnf_code: str, weighted: bool | None) -> None:
         # Print the top spending ICB for each month to the console
         for entry in top_spending_data:
             print(f"{entry['month']} {entry['icb']}")
+        print("\n")
 
     except requests.exceptions.RequestException:
         exit("Error: Failed to fetch data from OpenPrescribing API")
