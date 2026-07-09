@@ -85,7 +85,7 @@ class OpenPrescribingClient:
             requests.RequestException: If the API request fails due to network issues or other reasons.
         """
 
-        params: dict[str, str | bool] = {"exact": True, "format": "json", "q": bnf_code}
+        params: dict[str, str | bool] = {"format": "json", "q": bnf_code}
 
         # Check if the response contains data for the given BNF code
         data: list[BNFCodeEntry] = cast(

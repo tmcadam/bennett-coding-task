@@ -64,10 +64,14 @@ def main(bnf_code: str, weighted: bool | None, user_agent: str | None) -> None:
                 f"BNF code must be 15 characters long. Provided code: {bnf_code}"
             )
 
-        chemical_name: str = client.fetch_chemical_name(bnf_code)
+        # Extract the first 9 characters of the BNF code, for chemical substance lookup
+        # see https://www.bennett.ox.ac.uk/blog/2017/04/prescribing-data-bnf-codes/
+        chemical_substance_code = bnf_code[:9]
+
+        chemical_name: str = client.fetch_chemical_name(chemical_substance_code)
 
         spending_data: list[SpendingByOrgEntry] = client.fetch_icb_spending_data(
-            bnf_code
+            chemical_substance_code
         )
 
         top_spending_data: list[MonthlyTopPrescribingICB]
