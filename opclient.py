@@ -92,8 +92,6 @@ class OpenPrescribingClient:
             list[BNFCodeEntry], self.fetch_data_from_api("bnf_code", params)
         )
 
-        print(data)
-
         if not data:
             raise BNFCodeNotFoundError(
                 f"No chemical information found for BNF code {bnf_code}"
